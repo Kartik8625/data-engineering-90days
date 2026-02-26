@@ -1,99 +1,105 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, avg, sum as spark_sum, max as spark_max
+from pyspark.sql.functions import col, sum as spark_sum, avg
 from pyspark.sql.types import IntegerType
+import logging
+import os
+from datetime import datetime
+
+# ─── LOGGING SETUP ───────────────────────────────────────────
+def setup_logger():
+    os.makedirs("logs", exist_ok=True)
+    log_file = f"logs/airtravel_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s | %(levelname)s | %(message)s",
+        handlers=[
+            logging.FileHandler(log_file),
+            logging.StreamHandler()
+        ]
+    )
+    return logging.getLogger(__name__)
 
 # ─── Initialize Spark ────────────────────────────────────────
-def create_spark_session():
-    """Create and return a Spark session."""
+def create_spark_session(logger):
+    logger.info("Initializing Spark session...")
     spark = SparkSession.builder \
         .appName("Airtravel_Batch_ETL") \
         .getOrCreate()
     spark.sparkContext.setLogLevel("ERROR")
+    logger.info("Spark session created.")
     return spark
 
 # ─── EXTRACT ─────────────────────────────────────────────────
-def extract(spark, input_path):
-    """Load raw airtravel CSV into Spark DataFrame."""
-    print(">>> Extracting raw airtravel data...")
-    df = spark.read.csv(
-        input_path,
-        header=True,
-        inferSchema=True
-    )
-    # Clean column names (remove spaces and quotes)
+def extract(spark, input_path, logger):
+    logger.info(f"Extracting data from: {input_path}")
+
+    if not os.path.exists(input_path):
+        raise FileNotFoundError(f"Input file not found: {input_path}")
+
+    df = spark.read.csv(input_path, header=True, inferSchema=True)
+
+    # Clean column names
     for old_col in df.columns:
-        df = df.withColumnRenamed(old_col, old_col.strip().replace('"',''))
-    print(f"    Rows loaded: {df.count()}")
-    print(f"    Columns: {df.columns}")
+        df = df.withColumnRenamed(
+            old_col, old_col.strip().replace('"','')
+        )
+
+    logger.info(f"Rows loaded: {df.count()}")
     return df
 
 # ─── TRANSFORM ───────────────────────────────────────────────
-def transform(df):
-    """
-    Transform airtravel data.
-    - Cast columns to Integer
-    - Calculate total passengers per year
-    - Find monthly averages across all years
-    - Identify peak travel month
-    """
-    print(">>> Transforming airtravel data...")
+def transform(df, logger):
+    logger.info("Starting transformation...")
 
-    # Cast year columns to integer
     df_clean = df \
         .withColumn("1958", col("1958").cast(IntegerType())) \
         .withColumn("1959", col("1959").cast(IntegerType())) \
         .withColumn("1960", col("1960").cast(IntegerType()))
 
-    # Drop any null rows
     df_clean = df_clean.dropna()
 
-    # Add total column across all 3 years
-    df_clean = df_clean.withColumn(
-        "Total_3Years",
-        col("1958") + col("1959") + col("1960")
-    )
+    df_clean = df_clean \
+        .withColumn("Total_3Years",
+            col("1958") + col("1959") + col("1960")) \
+        .withColumn("Avg_Passengers",
+            ((col("1958")+col("1959")+col("1960"))/3
+            ).cast(IntegerType()))
 
-    # Add average column across all 3 years
-    df_clean = df_clean.withColumn(
-        "Avg_Passengers",
-        ((col("1958") + col("1959") + col("1960")) / 3).cast(IntegerType())
-    )
-
-    print("    Transformation complete.")
+    logger.info(f"Transformation complete. Rows: {df_clean.count()}")
     return df_clean
 
 # ─── LOAD ─────────────────────────────────────────────────────
-def load(df, output_path):
-    """Save transformed data as Parquet."""
-    print(">>> Loading data to Parquet...")
+def load(df, output_path, logger):
+    logger.info(f"Saving to: {output_path}")
     df.write.mode("overwrite").parquet(output_path)
-    print(f"    Data saved to: {output_path}")
+    logger.info("Data saved successfully.")
 
-# ─── MAIN PIPELINE ────────────────────────────────────────────
+# ─── MAIN ────────────────────────────────────────────────────
 if __name__ == "__main__":
+    logger = setup_logger()
+    logger.info("="*50)
+    logger.info("AIRTRAVEL ETL PIPELINE STARTED")
+    logger.info("="*50)
+
     INPUT_PATH  = "data/raw/airtravel.csv"
     OUTPUT_PATH = "data/processed/airtravel_clean_parquet"
 
-    spark       = create_spark_session()
-    df_raw      = extract(spark, INPUT_PATH)
-    df_clean    = transform(df_raw)
-    load(df_clean, OUTPUT_PATH)
+    try:
+        spark    = create_spark_session(logger)
+        df_raw   = extract(spark, INPUT_PATH, logger)
+        df_clean = transform(df_raw, logger)
+        load(df_clean, OUTPUT_PATH, logger)
 
-    # Preview full output
-    print("\n>>> Final Output — Monthly Airtravel Analysis:")
-    df_clean.show()
+        logger.info("="*50)
+        logger.info("PIPELINE COMPLETED SUCCESSFULLY")
+        logger.info("="*50)
 
-    # Summary stats
-    print(">>> Year-wise Total Passengers:")
-    df_clean.agg(
-        spark_sum("1958").alias("Total_1958"),
-        spark_sum("1959").alias("Total_1959"),
-        spark_sum("1960").alias("Total_1960")
-    ).show()
+        df_clean.show()
 
-    print(">>> Peak Travel Month (highest 3-year total):")
-    df_clean.orderBy(col("Total_3Years").desc()).show(1)
-
-    print("\n Pipeline completed successfully!")
-    spark.stop()
-
+    except FileNotFoundError as e:
+        logger.error(f"FILE ERROR: {e}")
+    except Exception as e:
+        logger.error(f"PIPELINE FAILED: {e}")
+    finally:
+        spark.stop()
+        logger.info("Spark session stopped.")

@@ -1,0 +1,16 @@
+2026-02-26 14:01:13,230 | INFO | ==================================================
+2026-02-26 14:01:13,230 | INFO | AIRTRAVEL ETL PIPELINE STARTED
+2026-02-26 14:01:13,230 | INFO | ==================================================
+2026-02-26 14:01:13,230 | INFO | Initializing Spark session...
+2026-02-26 14:01:17,486 | INFO | Spark session created.
+2026-02-26 14:01:17,487 | INFO | Extracting data from: data/raw/airtravel.csv
+2026-02-26 14:01:24,082 | INFO | Rows loaded: 12
+2026-02-26 14:01:24,083 | INFO | Starting transformation...
+2026-02-26 14:01:24,649 | INFO | Transformation complete. Rows: 12
+2026-02-26 14:01:24,650 | INFO | Saving to: data/processed/airtravel_clean_parquet
+2026-02-26 14:01:25,878 | INFO | Data saved successfully.
+2026-02-26 14:01:25,878 | INFO | ==================================================
+2026-02-26 14:01:25,878 | INFO | PIPELINE COMPLETED SUCCESSFULLY
+2026-02-26 14:01:25,878 | INFO | ==================================================
+2026-02-26 14:01:26,260 | INFO | Spark session stopped.
+2026-02-26 14:01:26,260 | INFO | Closing down clientserver connection

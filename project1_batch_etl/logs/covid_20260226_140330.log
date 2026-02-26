@@ -1,0 +1,20 @@
+2026-02-26 14:03:30,502 | INFO | =======================================================
+2026-02-26 14:03:30,502 | INFO | COVID ETL PIPELINE STARTED
+2026-02-26 14:03:30,502 | INFO | =======================================================
+2026-02-26 14:03:30,502 | INFO | Initializing Spark session...
+2026-02-26 14:03:34,716 | INFO | Spark session created.
+2026-02-26 14:03:34,716 | INFO | Extracting data from: data/raw/covid_data.csv
+2026-02-26 14:03:41,392 | INFO | Rows loaded: 247
+2026-02-26 14:03:41,428 | INFO | Columns selected: 11
+2026-02-26 14:03:41,428 | INFO | Starting transformation...
+2026-02-26 14:03:41,827 | INFO | After removing aggregated rows: 235
+2026-02-26 14:03:42,418 | INFO | After cleaning nulls: 234
+2026-02-26 14:03:42,573 | INFO | Transformation complete.
+2026-02-26 14:03:42,574 | INFO | Running analysis...
+2026-02-26 14:03:46,383 | INFO | Saving to: data/processed/covid_clean_parquet
+2026-02-26 14:03:47,664 | INFO | Data saved successfully.
+2026-02-26 14:03:47,665 | INFO | =======================================================
+2026-02-26 14:03:47,665 | INFO | COVID PIPELINE COMPLETED SUCCESSFULLY
+2026-02-26 14:03:47,665 | INFO | =======================================================
+2026-02-26 14:03:48,055 | INFO | Spark session stopped.
+2026-02-26 14:03:48,056 | INFO | Closing down clientserver connection

@@ -1,0 +1,18 @@
+2026-02-26 13:55:52,518 | INFO | ==================================================
+2026-02-26 13:55:52,518 | INFO | SUPERSTORE ETL PIPELINE STARTED
+2026-02-26 13:55:52,518 | INFO | ==================================================
+2026-02-26 13:55:52,518 | INFO | Initializing Spark session...
+2026-02-26 13:55:56,928 | INFO | Spark session created successfully.
+2026-02-26 13:55:56,928 | INFO | Extracting data from: data/raw/superstore.csv
+2026-02-26 13:56:03,555 | INFO | Extraction complete. Rows loaded: 40
+2026-02-26 13:56:03,555 | INFO | Starting transformation...
+2026-02-26 13:56:04,177 | INFO | Null rows removed: 0
+2026-02-26 13:56:04,622 | INFO | Negative sales removed: 0
+2026-02-26 13:56:05,631 | INFO | Transformation complete. Output rows: 11
+2026-02-26 13:56:05,631 | INFO | Loading data to: data/processed/superstore_clean_parquet
+2026-02-26 13:56:07,871 | INFO | Data successfully saved as Parquet.
+2026-02-26 13:56:07,871 | INFO | ==================================================
+2026-02-26 13:56:07,871 | INFO | PIPELINE COMPLETED SUCCESSFULLY
+2026-02-26 13:56:07,871 | INFO | ==================================================
+2026-02-26 13:56:08,763 | INFO | Spark session stopped.
+2026-02-26 13:56:08,764 | INFO | Closing down clientserver connection
